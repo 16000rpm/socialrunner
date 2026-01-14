@@ -31,3 +31,5 @@ full_output.txt
 # Test directories
 src/__tests__/
 src/test/
+.vercel
+.env*.local

@@ -1,6 +1,6 @@
-# Socialgirl
+# Social Runner
 
-![Socialgirl App Screenshot](socialgirl.png)
+![Social Runner App Screenshot](socialgirl.png)
 
 A web application that helps you track and analyze content performance across YouTube, Instagram, and TikTok. Search for videos, view engagement metrics, and monitor your API usage all in one place.
 
@@ -34,8 +34,8 @@ By Ken Kai does AI <https://www.skool.com/kenkai>
 Open Terminal (Mac) or Command Prompt (Windows) and run:
 
 ```bash
-git clone https://github.com/[your-username]/Socialgirl.git
-cd Socialgirl/socialgirl-app
+git clone https://github.com/[your-username]/Social Runner.git
+cd Social Runner/socialrunner-app
 ```
 
 ### Step 2: Install Dependencies

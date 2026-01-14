@@ -1,32 +1,37 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDialog } from '../contexts/DialogContext';
 import { useToast } from '../contexts/ToastContext';
-import { encryptData, decryptData, saveEncryptedSettings, loadEncryptedSettings, clearStoredSettings } from '../utils/encryption';
 import { getAllQuotaStatus, resetQuota } from '../utils/quotaManager';
 import { useApiKeys } from '../contexts/ApiKeyContext';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../utils/axios';
 import './SettingsPage.css';
 
 const SettingsPage = () => {
-    const { setApiKeys: setContextApiKeys, clearApiKeys } = useApiKeys();
+    const navigate = useNavigate();
+    const { refetchApiKeys } = useApiKeys();
+    const { user, logout } = useAuth();
     const { showConfirm } = useDialog();
     const { showToast, showErrorToast } = useToast();
-    const [apiKeys, setApiKeys] = useState({
-        youtubeApiKey: '',
-        rapidApiKey: ''
-    });
-    
-    const [password, setPassword] = useState('');
-    const [showKeys, setShowKeys] = useState({
+    const [apiKeysStatus, setApiKeysStatus] = useState({
         youtubeApiKey: false,
         rapidApiKey: false
     });
-    
-    const [hasStoredSettings, setHasStoredSettings] = useState(false);
     const [quotaStatus, setQuotaStatus] = useState({});
 
     useEffect(() => {
-        const stored = loadEncryptedSettings();
-        setHasStoredSettings(!!stored);
+        // Fetch API keys status
+        const fetchApiKeysStatus = async () => {
+            try {
+                const response = await api.get('/api/keys/status');
+                setApiKeysStatus(response.data);
+            } catch (error) {
+                console.error('[Settings] Failed to fetch API keys status:', error);
+            }
+        };
+
+        fetchApiKeysStatus();
         setQuotaStatus(getAllQuotaStatus());
     }, []);
     
@@ -40,7 +45,7 @@ const SettingsPage = () => {
             'RESET QUOTA',
             'CANCEL'
         );
-        
+
         if (confirmed) {
             resetQuota(platform);
             refreshQuotaStatus();
@@ -48,99 +53,34 @@ const SettingsPage = () => {
         }
     };
 
-
-    const handleInputChange = (field, value) => {
-        setApiKeys(prev => ({ ...prev, [field]: value }));
-    };
-
-    const toggleVisibility = (field) => {
-        setShowKeys(prev => ({ ...prev, [field]: !prev[field] }));
-    };
-
-    const handleSave = async () => {
-        if (!password.trim()) {
-            showErrorToast('Please enter a password to encrypt your API keys');
-            return;
-        }
-
-        const hasKeys = Object.values(apiKeys).some(key => key.trim());
-        if (!hasKeys) {
-            showErrorToast('Please enter at least one API key');
-            return;
-        }
-
-        try {
-            console.log('[Settings] Saving API keys...');
-            const encrypted = await encryptData(apiKeys, password);
-            saveEncryptedSettings(encrypted);
-            
-            // Store decrypted keys in context for immediate use
-            console.log('[Settings] Storing keys in context for session use');
-            setContextApiKeys(apiKeys);
-            
-            setHasStoredSettings(true);
-            showToast('Settings saved successfully!', 'success');
-            setPassword('');
-        } catch (error) {
-            console.error('[Settings] Failed to save settings:', error);
-            showErrorToast('Failed to save settings: ' + error.message);
-        }
-    };
-
-    const handleLoad = async () => {
-        if (!password.trim()) {
-            showErrorToast('Please enter your password to decrypt settings');
-            return;
-        }
-
-        const stored = loadEncryptedSettings();
-        if (!stored) {
-            showErrorToast('No stored settings found');
-            return;
-        }
-
-        try {
-            console.log('[Settings] Loading and decrypting API keys...');
-            const decrypted = await decryptData(stored, password);
-            
-            // Update local state
-            setApiKeys(decrypted);
-            
-            // Store decrypted keys in context for API use
-            console.log('[Settings] Storing loaded keys in context for session use');
-            setContextApiKeys(decrypted);
-            
-            showToast('Settings loaded successfully!', 'success');
-            setPassword('');
-        } catch (error) {
-            console.error('[Settings] Failed to load settings:', error);
-            showErrorToast('Failed to load settings: ' + error.message);
-        }
-    };
-
-
-    const handleClear = async () => {
+    const handleLogout = async () => {
         const confirmed = await showConfirm(
-            'Are you sure you want to clear all stored settings? This cannot be undone.',
-            'CLEAR SETTINGS',
+            'Are you sure you want to logout?',
+            'LOGOUT',
             'CANCEL'
         );
-        
+
         if (confirmed) {
-            console.log('[Settings] Clearing all stored settings and context');
-            clearStoredSettings();
-            
-            // Clear local state
-            setApiKeys({
-                youtubeApiKey: '',
-                rapidApiKey: ''
-            });
-            
-            // Clear context
-            clearApiKeys();
-            
-            setHasStoredSettings(false);
-            showToast('All settings cleared', 'success');
+            await logout();
+            showToast('Logged out successfully', 'success');
+            navigate('/login');
+        }
+    };
+
+    const handleRefreshKeys = async () => {
+        try {
+            const result = await refetchApiKeys();
+            if (result.success) {
+                showToast('API keys refreshed successfully', 'success');
+
+                // Refresh status
+                const response = await api.get('/api/keys/status');
+                setApiKeysStatus(response.data);
+            } else {
+                showErrorToast('Failed to refresh API keys');
+            }
+        } catch (error) {
+            showErrorToast('Failed to refresh API keys');
         }
     };
 
@@ -148,85 +88,57 @@ const SettingsPage = () => {
         <div className="platform-page">
             <div className="settings-grid">
                     <div className="settings-left-column">
+                        {/* User Profile Section */}
                         <div className="settings-section">
-                    <h3 className="section-subtitle">API Keys</h3>
-                    <p className="section-description">
-                        Enter your API keys to enable data fetching from each platform.
-                    </p>
+                            <h3 className="section-subtitle">User Profile</h3>
+                            <p className="section-description">
+                                Your account information and actions.
+                            </p>
 
-                    <div className="form-group">
-                        <label>YouTube API Key</label>
-                        <div className="input-group">
-                            <input
-                                type={showKeys.youtubeApiKey ? 'text' : 'password'}
-                                value={apiKeys.youtubeApiKey}
-                                onChange={(e) => handleInputChange('youtubeApiKey', e.target.value)}
-                                placeholder="Enter YouTube API key"
-                            />
-                            <button 
-                                type="button" 
-                                className="aurora-btn aurora-btn-subtle aurora-btn-icon aurora-btn-icon-only aurora-btn-sm toggle-btn"
-                                onClick={() => toggleVisibility('youtubeApiKey')}
-                                aria-label={showKeys.youtubeApiKey ? 'Hide API key' : 'Show API key'}
-                            >
-                                {showKeys.youtubeApiKey ? '🙈' : '👁️'}
-                            </button>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input
+                                    type="text"
+                                    value={user?.email || ''}
+                                    disabled
+                                    style={{ opacity: 0.7, cursor: 'not-allowed' }}
+                                />
+                            </div>
+
+                            <div className="button-group-compact">
+                                <button onClick={handleLogout} className="aurora-btn aurora-btn-danger aurora-btn-sm">
+                                    Logout
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="form-group">
-                        <label>RapidAPI Key (Instagram & TikTok)</label>
-                        <div className="input-group">
-                            <input
-                                type={showKeys.rapidApiKey ? 'text' : 'password'}
-                                value={apiKeys.rapidApiKey}
-                                onChange={(e) => handleInputChange('rapidApiKey', e.target.value)}
-                                placeholder="Enter RapidAPI key for Instagram & TikTok"
-                            />
-                            <button 
-                                type="button" 
-                                className="aurora-btn aurora-btn-subtle aurora-btn-icon aurora-btn-icon-only aurora-btn-sm toggle-btn"
-                                onClick={() => toggleVisibility('rapidApiKey')}
-                                aria-label={showKeys.rapidApiKey ? 'Hide API key' : 'Show API key'}
-                            >
-                                {showKeys.rapidApiKey ? '🙈' : '👁️'}
-                            </button>
-                        </div>
-                    </div>
+                        {/* API Keys Status Section */}
+                        <div className="settings-section">
+                            <h3 className="section-subtitle">API Keys Status</h3>
+                            <p className="section-description">
+                                Team-shared API keys are managed by administrators.
+                            </p>
 
-                    <div className="form-group">
-                        <label>Encryption Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter password for encryption"
-                        />
-                    </div>
-                    
-                    <div className="button-group-compact">
-                        <button onClick={handleSave} className="aurora-btn aurora-btn-primary aurora-btn-sm">
-                            Save
-                        </button>
-                        
-                        <button 
-                            onClick={handleLoad} 
-                            className="aurora-btn aurora-btn-secondary aurora-btn-sm"
-                            disabled={!hasStoredSettings}
-                        >
-                            Load
-                        </button>
-                        
-                        <span className="button-separator">•</span>
-                        
-                        <button 
-                            onClick={handleClear} 
-                            className="aurora-btn aurora-btn-danger aurora-btn-sm"
-                            disabled={!hasStoredSettings}
-                        >
-                            Clear All
-                        </button>
-                    </div>
+                            <div className="api-keys-status">
+                                <div className="api-key-status-item">
+                                    <span className="api-key-label">YouTube API Key:</span>
+                                    <span className={`api-key-badge ${apiKeysStatus.youtubeApiKey ? 'configured' : 'not-configured'}`}>
+                                        {apiKeysStatus.youtubeApiKey ? '✓ Configured' : '✗ Not Configured'}
+                                    </span>
+                                </div>
+                                <div className="api-key-status-item">
+                                    <span className="api-key-label">RapidAPI Key:</span>
+                                    <span className={`api-key-badge ${apiKeysStatus.rapidApiKey ? 'configured' : 'not-configured'}`}>
+                                        {apiKeysStatus.rapidApiKey ? '✓ Configured' : '✗ Not Configured'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="button-group-compact">
+                                <button onClick={handleRefreshKeys} className="aurora-btn aurora-btn-secondary aurora-btn-sm">
+                                    Refresh Keys
+                                </button>
+                            </div>
                         </div>
                     </div>
 

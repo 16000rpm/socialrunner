@@ -68,7 +68,7 @@ const Preloader = ({ onLoadComplete }) => {
                     <div className="liquid-shape"></div>
                 </div>
                 
-                <div className="loading-text">SOCIALGIRL</div>
+                <div className="loading-text">SOCIAL RUNNER</div>
                 <div className="loading-percentage" id="percentage">{percentage}%</div>
                 <div className="progress-bar">
                     <div className="progress-fill" style={{ width: `${percentage}%` }}></div>

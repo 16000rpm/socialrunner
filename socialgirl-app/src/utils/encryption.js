@@ -74,14 +74,14 @@ export async function decryptData(encryptedData, password) {
 
 // Storage helpers
 export function saveEncryptedSettings(encryptedData) {
-    localStorage.setItem('socialgirl_settings', JSON.stringify(encryptedData));
+    localStorage.setItem('socialrunner_settings', JSON.stringify(encryptedData));
 }
 
 export function loadEncryptedSettings() {
-    const stored = localStorage.getItem('socialgirl_settings');
+    const stored = localStorage.getItem('socialrunner_settings');
     return stored ? JSON.parse(stored) : null;
 }
 
 export function clearStoredSettings() {
-    localStorage.removeItem('socialgirl_settings');
+    localStorage.removeItem('socialrunner_settings');
 }
