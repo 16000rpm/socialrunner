@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const authRoutes = require('./routes/auth');
 const apiKeyRoutes = require('./routes/apiKeys');
+const proxyRoutes = require('./routes/proxy');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -30,6 +31,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/keys', apiKeyRoutes);
+app.use('/api/proxy', proxyRoutes);
 
 // 404 handler
 app.use((req, res) => {

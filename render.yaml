@@ -29,3 +29,5 @@ services:
         value: a04f8c2e1b9d7f6a3c5e8b2d4f1a9c7e3b6d8f2a4c1e7b9d3f5a8c2e4b6d9f1a3
       - key: RESEND_API_KEY
         sync: false
+      - key: RAPIDAPI_KEY
+        sync: false

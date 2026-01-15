@@ -1,14 +1,19 @@
-import { getApiKey } from '../utils/apiKeyManager';
 import { trackOperation, canPerformOperation } from '../utils/quotaManager';
-
-// Get API key from storage or environment
-async function getRapidApiKey() {
-    return await getApiKey('rapidApiKey', 'VITE_RAPIDAPI_KEY');
-}
 
 // TikTok RapidAPI configuration
 const RAPIDAPI_HOST = 'tiktok-api23.p.rapidapi.com';
-const BASE_URL = `https://${RAPIDAPI_HOST}/api`;
+
+// Use backend proxy in production to avoid CORS issues
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const IS_PRODUCTION = import.meta.env.PROD;
+
+// In production, use backend proxy. In development, can use direct API (no CORS issue for TikTok).
+function getBaseUrl() {
+    if (IS_PRODUCTION) {
+        return `${API_BASE_URL}/api/proxy/tiktok`;
+    }
+    return `https://${RAPIDAPI_HOST}/api`;
+}
 
 /**
  * Search TikTok content by keyword using general search
@@ -19,36 +24,33 @@ const BASE_URL = `https://${RAPIDAPI_HOST}/api`;
  */
 async function searchVideos(keyword, cursor = 0, searchId = 0) {
     console.log(`[TikTok API] Starting searchVideos for keyword: "${keyword}", cursor: ${cursor}`);
-    
+
     if (!canPerformOperation('tiktok', 'request')) {
         throw new Error('TikTok API quota exceeded. Please try again next month.');
     }
-    
-    const apiKey = await getRapidApiKey();
-    
-    if (!apiKey) {
-        throw new Error('RapidAPI key not found. Please configure it in Settings.');
-    }
-    
-    const url = `${BASE_URL}/search/general?keyword=${encodeURIComponent(keyword)}&cursor=${cursor}&search_id=${searchId}`;
+
+    const baseUrl = getBaseUrl();
+    const url = `${baseUrl}/search/general?keyword=${encodeURIComponent(keyword)}&cursor=${cursor}&search_id=${searchId}`;
     console.log(`[TikTok API] Making request to: ${url}`);
-    
+
+    const headers = IS_PRODUCTION ? {} : {
+        'x-rapidapi-key': import.meta.env.VITE_RAPIDAPI_KEY || '',
+        'x-rapidapi-host': RAPIDAPI_HOST
+    };
+
     const response = await fetch(url, {
         method: 'GET',
-        headers: {
-            'x-rapidapi-key': apiKey,
-            'x-rapidapi-host': RAPIDAPI_HOST
-        }
+        headers
     });
-    
+
     console.log(`[TikTok API] Response status: ${response.status} ${response.statusText}`);
-    
+
     if (!response.ok) {
         const errorText = await response.text();
         console.error(`[TikTok API] Error response body:`, errorText);
         throw new Error(`TikTok API error: ${response.status} - ${errorText}`);
     }
-    
+
     const result = await response.json();
     console.log(`[TikTok API] Search response structure:`, {
         hasData: !!result,
@@ -57,7 +59,7 @@ async function searchVideos(keyword, cursor = 0, searchId = 0) {
         dataLength: result.data?.length || 0,
         sampleKeys: result && typeof result === 'object' ? Object.keys(result).slice(0, 5) : null
     });
-    
+
     if (result.data) {
         console.log(`[TikTok API] Found ${result.data.length} items in search response`);
         if (result.data.length > 0 && result.data[0]) {
@@ -67,7 +69,7 @@ async function searchVideos(keyword, cursor = 0, searchId = 0) {
             });
         }
     }
-    
+
     trackOperation('tiktok', 'request');
     return result;
 }
@@ -79,36 +81,33 @@ async function searchVideos(keyword, cursor = 0, searchId = 0) {
  */
 async function getUserInfo(uniqueId) {
     console.log(`[TikTok API] Starting getUserInfo for username: ${uniqueId}`);
-    
+
     if (!canPerformOperation('tiktok', 'request')) {
         throw new Error('TikTok API quota exceeded. Please try again next month.');
     }
-    
-    const apiKey = await getRapidApiKey();
-    
-    if (!apiKey) {
-        throw new Error('RapidAPI key not found. Please configure it in Settings.');
-    }
-    
-    const url = `${BASE_URL}/user/info?uniqueId=${uniqueId}`;
+
+    const baseUrl = getBaseUrl();
+    const url = `${baseUrl}/user/info?uniqueId=${encodeURIComponent(uniqueId)}`;
     console.log(`[TikTok API] Making request to: ${url}`);
-    
+
+    const headers = IS_PRODUCTION ? {} : {
+        'x-rapidapi-key': import.meta.env.VITE_RAPIDAPI_KEY || '',
+        'x-rapidapi-host': RAPIDAPI_HOST
+    };
+
     const response = await fetch(url, {
         method: 'GET',
-        headers: {
-            'x-rapidapi-key': apiKey,
-            'x-rapidapi-host': RAPIDAPI_HOST
-        }
+        headers
     });
-    
+
     console.log(`[TikTok API] Response status: ${response.status} ${response.statusText}`);
-    
+
     if (!response.ok) {
         const errorText = await response.text();
         console.error(`[TikTok API] Error response body:`, errorText);
         throw new Error(`TikTok API error: ${response.status} - ${errorText}`);
     }
-    
+
     const result = await response.json();
     console.log(`[TikTok API] User info retrieved:`, {
         hasUserInfo: !!result.userInfo,
@@ -116,7 +115,7 @@ async function getUserInfo(uniqueId) {
         username: result.userInfo?.user?.uniqueId,
         secUid: result.userInfo?.user?.secUid
     });
-    
+
     trackOperation('tiktok', 'request');
     return result;
 }
@@ -130,43 +129,40 @@ async function getUserInfo(uniqueId) {
  */
 async function getUserPopularPosts(secUid, count = 35, cursor = 0) {
     console.log(`[TikTok API] Starting getUserPopularPosts for secUid: ${secUid}, count: ${count}`);
-    
+
     if (!canPerformOperation('tiktok', 'request')) {
         throw new Error('TikTok API quota exceeded. Please try again next month.');
     }
-    
-    const apiKey = await getRapidApiKey();
-    
-    if (!apiKey) {
-        throw new Error('RapidAPI key not found. Please configure it in Settings.');
-    }
-    
-    const url = `${BASE_URL}/user/popular-posts?secUid=${secUid}&count=${count}&cursor=${cursor}`;
+
+    const baseUrl = getBaseUrl();
+    const url = `${baseUrl}/user/popular-posts?secUid=${encodeURIComponent(secUid)}&count=${count}&cursor=${cursor}`;
     console.log(`[TikTok API] Making request to: ${url}`);
-    
+
+    const headers = IS_PRODUCTION ? {} : {
+        'x-rapidapi-key': import.meta.env.VITE_RAPIDAPI_KEY || '',
+        'x-rapidapi-host': RAPIDAPI_HOST
+    };
+
     const response = await fetch(url, {
         method: 'GET',
-        headers: {
-            'x-rapidapi-key': apiKey,
-            'x-rapidapi-host': RAPIDAPI_HOST
-        }
+        headers
     });
-    
+
     console.log(`[TikTok API] Response status: ${response.status} ${response.statusText}`);
-    
+
     if (!response.ok) {
         const errorText = await response.text();
         console.error(`[TikTok API] Error response body:`, errorText);
         throw new Error(`TikTok API error: ${response.status} - ${errorText}`);
     }
-    
+
     // Handle 204 No Content response (user has no popular posts)
     if (response.status === 204) {
         console.log(`[TikTok API] No content (204) - user has no popular posts`);
         trackOperation('tiktok', 'request');
         return { data: { itemList: [] } }; // Return empty list structure
     }
-    
+
     const result = await response.json();
     console.log(`[TikTok API] Success! Response data structure:`, {
         hasData: !!result,
@@ -176,11 +172,11 @@ async function getUserPopularPosts(secUid, count = 35, cursor = 0) {
         itemListLength: result.data?.itemList?.length || 0,
         sampleKeys: result && typeof result === 'object' ? Object.keys(result).slice(0, 5) : null
     });
-    
+
     if (result.data?.itemList) {
         console.log(`[TikTok API] Found ${result.data.itemList.length} items in response`);
     }
-    
+
     trackOperation('tiktok', 'request');
     return result;
 }
