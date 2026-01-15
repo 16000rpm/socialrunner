@@ -2,7 +2,8 @@ const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Social Runner <noreply@socialrunner.app>';
+// Use Resend's default domain for testing, or custom domain if verified
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Social Runner <onboarding@resend.dev>';
 
 /**
  * Send password reset email
