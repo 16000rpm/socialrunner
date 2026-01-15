@@ -108,3 +108,23 @@
     color: var(--aurora-cyan);
     font-weight: 700;
 }
+
+/* Footer */
+.app-footer {
+    text-align: center;
+    padding: 24px 16px;
+    margin-top: auto;
+    border-top: 1px solid var(--aurora-border);
+}
+
+.app-footer p {
+    font-size: 12px;
+    color: var(--aurora-text-secondary);
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.main-content {
+    flex: 1;
+    min-height: 0;
+}

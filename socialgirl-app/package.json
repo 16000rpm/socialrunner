@@ -1,7 +1,9 @@
 {
-  "name": "socialrunner-app",
+  "name": "social-runner-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "author": "Rahul Prakash Menon",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",

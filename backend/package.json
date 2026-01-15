@@ -1,7 +1,9 @@
 {
-  "name": "backend",
+  "name": "social-runner-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Social Runner API Backend",
+  "author": "Rahul Prakash Menon",
+  "license": "MIT",
   "main": "index.js",
   "scripts": {
     "start": "node src/server.js",

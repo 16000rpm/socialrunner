@@ -54,6 +54,7 @@ function AppContent() {
             
             <div className="container">
                 <Header />
+                <main className="main-content">
                 <Routes>
                     {/* Public routes */}
                     <Route path="/login" element={<LoginPage />} />
@@ -127,6 +128,10 @@ function AppContent() {
                         }
                     />
                 </Routes>
+                </main>
+                <footer className="app-footer">
+                    <p>© 2025 Rahul Prakash Menon. All rights reserved.</p>
+                </footer>
             </div>
         </div>
     );
