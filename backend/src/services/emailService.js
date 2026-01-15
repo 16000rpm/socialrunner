@@ -1,6 +1,17 @@
 const { Resend } = require('resend');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend lazily to avoid crashing if API key is missing
+let resend = null;
+
+function getResendClient() {
+  if (!resend) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY environment variable is not set');
+    }
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 // Use Resend's default domain for testing, or custom domain if verified
 const FROM_EMAIL = process.env.FROM_EMAIL || 'Social Runner <onboarding@resend.dev>';
@@ -13,7 +24,8 @@ const FROM_EMAIL = process.env.FROM_EMAIL || 'Social Runner <onboarding@resend.d
  */
 async function sendPasswordResetEmail(to, resetToken, resetUrl) {
   try {
-    const { data, error } = await resend.emails.send({
+    const client = getResendClient();
+    const { data, error } = await client.emails.send({
       from: FROM_EMAIL,
       to: [to],
       subject: 'Reset Your Social Runner Password',
