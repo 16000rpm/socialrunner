@@ -8,6 +8,8 @@ import TikTokPage from './pages/TikTokPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import usePlatformData from './hooks/usePlatformData';
 import useSearch from './hooks/useSearch';
@@ -59,6 +61,8 @@ function AppContent() {
                     {/* Public routes */}
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                     {/* Protected routes */}
                     <Route path="/" element={<Navigate to="/youtube" replace />} />

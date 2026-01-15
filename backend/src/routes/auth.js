@@ -27,10 +27,28 @@ const loginValidation = [
     .withMessage('Password required')
 ];
 
+const forgotPasswordValidation = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Valid email required')
+];
+
+const resetPasswordValidation = [
+  body('token')
+    .notEmpty()
+    .withMessage('Reset token required'),
+  body('password')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+];
+
 // Routes
 router.post('/signup', authLimiter, signupValidation, validate, authController.signup);
 router.post('/login', authLimiter, loginValidation, validate, authController.login);
 router.post('/refresh', authController.refresh);
 router.post('/logout', authController.logout);
+router.post('/forgot-password', authLimiter, forgotPasswordValidation, validate, authController.forgotPassword);
+router.post('/reset-password', authLimiter, resetPasswordValidation, validate, authController.resetPassword);
 
 module.exports = router;

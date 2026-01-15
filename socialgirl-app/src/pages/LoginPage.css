@@ -139,6 +139,38 @@
   text-decoration: underline;
 }
 
+.forgot-password-link {
+  text-align: right;
+  margin-top: -0.5rem;
+}
+
+.forgot-password-link a {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.forgot-password-link a:hover {
+  color: #667eea;
+}
+
+.success-message {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.success-message p {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.success-message p:last-of-type {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .auth-page {

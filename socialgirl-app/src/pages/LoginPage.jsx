@@ -87,6 +87,10 @@ const LoginPage = () => {
               />
             </div>
 
+            <div className="forgot-password-link">
+              <Link to="/forgot-password">Forgot password?</Link>
+            </div>
+
             <button
               type="submit"
               className="aurora-btn aurora-btn-primary auth-submit-btn"

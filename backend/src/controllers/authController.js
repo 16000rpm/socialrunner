@@ -1,4 +1,5 @@
 const authService = require('../services/authService');
+const passwordResetService = require('../services/passwordResetService');
 
 /**
  * Sign up a new user
@@ -90,9 +91,51 @@ async function logout(req, res, next) {
   }
 }
 
+/**
+ * Request password reset
+ * POST /api/auth/forgot-password
+ */
+async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+    await passwordResetService.requestPasswordReset(email, frontendUrl);
+
+    // Always return success to prevent email enumeration
+    res.status(200).json({
+      success: true,
+      message: 'If an account exists with this email, a password reset link has been sent'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Reset password with token
+ * POST /api/auth/reset-password
+ */
+async function resetPassword(req, res, next) {
+  try {
+    const { token, password } = req.body;
+
+    await passwordResetService.resetPassword(token, password);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   signup,
   login,
   refresh,
-  logout
+  logout,
+  forgotPassword,
+  resetPassword
 };
