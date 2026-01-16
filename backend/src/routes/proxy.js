@@ -127,13 +127,23 @@ router.get('/tiktok/search/general', async (req, res) => {
       }
     });
 
+    // Handle 204 No Content
+    if (response.status === 204) {
+      return res.json({ data: [] });
+    }
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[Proxy] TikTok API error: ${response.status}`, errorText);
       return res.status(response.status).json({ error: errorText });
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    if (!text) {
+      return res.json({ data: [] });
+    }
+
+    const data = JSON.parse(text);
     res.json(data);
   } catch (error) {
     console.error('[Proxy] TikTok search error:', error.message);
@@ -166,13 +176,23 @@ router.get('/tiktok/user/info', async (req, res) => {
       }
     });
 
+    // Handle 204 No Content
+    if (response.status === 204) {
+      return res.json({ userInfo: null });
+    }
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[Proxy] TikTok API error: ${response.status}`, errorText);
       return res.status(response.status).json({ error: errorText });
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    if (!text) {
+      return res.json({ userInfo: null });
+    }
+
+    const data = JSON.parse(text);
     res.json(data);
   } catch (error) {
     console.error('[Proxy] TikTok user info error:', error.message);
@@ -216,7 +236,12 @@ router.get('/tiktok/user/popular-posts', async (req, res) => {
       return res.status(response.status).json({ error: errorText });
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    if (!text) {
+      return res.json({ data: { itemList: [] } });
+    }
+
+    const data = JSON.parse(text);
     res.json(data);
   } catch (error) {
     console.error('[Proxy] TikTok popular posts error:', error.message);
