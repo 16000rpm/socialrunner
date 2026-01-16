@@ -14,7 +14,7 @@ async function resetPassword() {
         // Update the user's password
         const user = await prisma.user.update({
             where: { email },
-            data: { password: hashedPassword }
+            data: { passwordHash: hashedPassword }
         });
 
         console.log(`Password reset successfully for user: ${user.email}`);
