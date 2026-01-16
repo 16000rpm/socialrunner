@@ -1,15 +1,10 @@
 const { Resend } = require('resend');
 
-// Initialize Resend lazily to avoid crashing if API key is missing
-let resend = null;
+// Initialize Resend client
+const RESEND_API_KEY = 're_CpuZ2CGm_Nx6kKkmQpJ2S9UwdtuQkaGYu';
+const resend = new Resend(RESEND_API_KEY);
 
 function getResendClient() {
-  if (!resend) {
-    if (!process.env.RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY environment variable is not set');
-    }
-    resend = new Resend(process.env.RESEND_API_KEY);
-  }
   return resend;
 }
 
