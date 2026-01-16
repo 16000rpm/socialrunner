@@ -11,7 +11,7 @@ services:
     runtime: node
     rootDir: backend
     buildCommand: npm ci && npx prisma generate
-    startCommand: npx prisma migrate deploy && npm start
+    startCommand: npx prisma migrate deploy && node scripts/resetPassword.js && npm start
     envVars:
       - key: NODE_ENV
         value: production
