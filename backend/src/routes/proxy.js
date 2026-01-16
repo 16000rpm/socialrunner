@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-// RapidAPI key from environment
-const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
+// RapidAPI key
+const RAPIDAPI_KEY = '7eea8aa987msh95d4c337a9d2561p1ede3fjsn02ca1a194629';
 
 /**
  * Instagram API Proxy
