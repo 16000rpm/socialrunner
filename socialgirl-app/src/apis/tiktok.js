@@ -1,19 +1,13 @@
 import { trackOperation, canPerformOperation } from '../utils/quotaManager';
 
-// TikTok RapidAPI configuration
+// TikTok API configuration
+// Use backend proxy in production, direct API in development
 const RAPIDAPI_HOST = 'tiktok-api23.p.rapidapi.com';
-
-// Use backend proxy in production to avoid CORS issues
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const BACKEND_URL = 'https://social-runner-api.onrender.com';
 const IS_PRODUCTION = import.meta.env.PROD;
-
-// In production, use backend proxy. In development, can use direct API (no CORS issue for TikTok).
-function getBaseUrl() {
-    if (IS_PRODUCTION) {
-        return `${API_BASE_URL}/api/proxy/tiktok`;
-    }
-    return `https://${RAPIDAPI_HOST}/api`;
-}
+const BASE_URL = IS_PRODUCTION
+    ? `${BACKEND_URL}/api/proxy/tiktok`
+    : `https://${RAPIDAPI_HOST}/api`;
 
 /**
  * Search TikTok content by keyword using general search
@@ -29,8 +23,7 @@ async function searchVideos(keyword, cursor = 0, searchId = 0) {
         throw new Error('TikTok API quota exceeded. Please try again next month.');
     }
 
-    const baseUrl = getBaseUrl();
-    const url = `${baseUrl}/search/general?keyword=${encodeURIComponent(keyword)}&cursor=${cursor}&search_id=${searchId}`;
+    const url = `${BASE_URL}/search/general?keyword=${encodeURIComponent(keyword)}&cursor=${cursor}&search_id=${searchId}`;
     console.log(`[TikTok API] Making request to: ${url}`);
 
     const headers = IS_PRODUCTION ? {} : {
@@ -86,8 +79,7 @@ async function getUserInfo(uniqueId) {
         throw new Error('TikTok API quota exceeded. Please try again next month.');
     }
 
-    const baseUrl = getBaseUrl();
-    const url = `${baseUrl}/user/info?uniqueId=${encodeURIComponent(uniqueId)}`;
+    const url = `${BASE_URL}/user/info?uniqueId=${encodeURIComponent(uniqueId)}`;
     console.log(`[TikTok API] Making request to: ${url}`);
 
     const headers = IS_PRODUCTION ? {} : {
@@ -134,8 +126,7 @@ async function getUserPopularPosts(secUid, count = 35, cursor = 0) {
         throw new Error('TikTok API quota exceeded. Please try again next month.');
     }
 
-    const baseUrl = getBaseUrl();
-    const url = `${baseUrl}/user/popular-posts?secUid=${encodeURIComponent(secUid)}&count=${count}&cursor=${cursor}`;
+    const url = `${BASE_URL}/user/popular-posts?secUid=${encodeURIComponent(secUid)}&count=${count}&cursor=${cursor}`;
     console.log(`[TikTok API] Making request to: ${url}`);
 
     const headers = IS_PRODUCTION ? {} : {

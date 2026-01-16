@@ -1,19 +1,12 @@
 import { trackOperation, canPerformOperation } from '../utils/quotaManager';
 
-// Instagram RapidAPI configuration
-const RAPIDAPI_HOST = 'instagram-scraper-20251.p.rapidapi.com';
-
+// Instagram API configuration
 // Use backend proxy in production, Vite proxy in development
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const BACKEND_URL = 'https://social-runner-api.onrender.com';
 const IS_PRODUCTION = import.meta.env.PROD;
-
-// In production, use backend proxy. In development, use Vite proxy.
-function getBaseUrl() {
-    if (IS_PRODUCTION) {
-        return `${API_BASE_URL}/api/proxy/instagram`;
-    }
-    return `/api/instagram`; // Vite proxy will route to https://instagram-scraper-20251.p.rapidapi.com
-}
+const BASE_URL = IS_PRODUCTION
+    ? `${BACKEND_URL}/api/proxy/instagram`
+    : '/api/instagram';
 
 /**
  * Search for Instagram reels by keyword
@@ -30,8 +23,7 @@ async function searchReels(keyword, paginationToken = null) {
         throw new Error(errorMsg);
     }
 
-    const baseUrl = getBaseUrl();
-    let url = `${baseUrl}/searchreels?keyword=${encodeURIComponent(keyword)}`;
+    let url = `${BASE_URL}/searchreels?keyword=${encodeURIComponent(keyword)}`;
     if (paginationToken) {
         url += `&pagination_token=${encodeURIComponent(paginationToken)}`;
         console.log(`[Instagram API] Using pagination token`);
@@ -90,8 +82,7 @@ async function getUserReels(usernameOrId, paginationToken = null) {
         throw new Error(errorMsg);
     }
 
-    const baseUrl = getBaseUrl();
-    let url = `${baseUrl}/userreels?username_or_id=${encodeURIComponent(usernameOrId)}`;
+    let url = `${BASE_URL}/userreels?username_or_id=${encodeURIComponent(usernameOrId)}`;
     if (paginationToken) {
         url += `&pagination_token=${encodeURIComponent(paginationToken)}`;
         console.log(`[Instagram API] Using pagination token`);
