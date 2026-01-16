@@ -1,11 +1,12 @@
-import { getApiKey } from '../utils/apiKeyManager';
 import { trackOperation, canPerformOperation } from '../utils/quotaManager';
 
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
-// Get API key from storage or environment
+// Hardcoded YouTube API key
+const YOUTUBE_API_KEY = 'AIzaSyCtuxXmT-uCDVCTIHmbP_wLS3kGsGNO-rE';
+
 async function getYouTubeApiKey() {
-    return await getApiKey('youtubeApiKey', 'VITE_YOUTUBE_API_KEY');
+    return YOUTUBE_API_KEY;
 }
 
 /**
