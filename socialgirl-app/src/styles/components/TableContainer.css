@@ -42,6 +42,11 @@
     height: 20px;
 }
 
+/* Trending button */
+.trending-btn {
+    white-space: nowrap;
+}
+
 /* Table actions container */
 .table-actions {
     display: flex;

@@ -1,12 +1,11 @@
 import { trackOperation, canPerformOperation } from '../utils/quotaManager';
 
 // Instagram API configuration
-// Use backend proxy in production, Vite proxy in development
-const BACKEND_URL = 'https://social-runner-api.onrender.com';
-const IS_PRODUCTION = import.meta.env.PROD;
-const BASE_URL = IS_PRODUCTION
-    ? `${BACKEND_URL}/api/proxy/instagram`
-    : '/api/instagram';
+// Always use backend proxy for API key security
+const BACKEND_URL = import.meta.env.PROD
+    ? 'https://social-runner-api.onrender.com'
+    : 'http://localhost:5001';
+const BASE_URL = `${BACKEND_URL}/api/proxy/instagram`;
 
 /**
  * Search for Instagram reels by keyword
@@ -31,10 +30,7 @@ async function searchReels(keyword, paginationToken = null) {
     console.log(`[Instagram API] Making request to: ${url}`);
 
     const options = {
-        method: 'GET',
-        headers: IS_PRODUCTION ? {} : {
-            'x-rapidapi-key': 'handled-by-vite-proxy'
-        }
+        method: 'GET'
     };
 
     try {
@@ -90,10 +86,7 @@ async function getUserReels(usernameOrId, paginationToken = null) {
     console.log(`[Instagram API] Making request to: ${url}`);
 
     const options = {
-        method: 'GET',
-        headers: IS_PRODUCTION ? {} : {
-            'x-rapidapi-key': 'handled-by-vite-proxy'
-        }
+        method: 'GET'
     };
 
     try {

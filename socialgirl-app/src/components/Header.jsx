@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
 import Navigation from './Navigation';
 import '../styles/components/Header.css';
 
 const Header = () => {
     const location = useLocation();
     const { user, isAuthenticated } = useAuth();
+    const { onlineCount, onlineUsers, isConnected } = useSocket();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showOnlineUsers, setShowOnlineUsers] = useState(false);
 
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
 
-    // Don't show header on auth pages
-    if (location.pathname === '/login' || location.pathname === '/signup') {
+    // Don't show header on login page
+    if (location.pathname === '/login') {
         return null;
     }
 
@@ -25,9 +28,37 @@ const Header = () => {
                     <div className="morph-shape"></div>
                 </div>
                 <h1 className="gradient-wave">SOCIAL RUNNER</h1>
+                <div
+                    className="online-users"
+                    onClick={() => setShowOnlineUsers(!showOnlineUsers)}
+                    title={isConnected ? 'Click to see who\'s online' : 'Disconnected'}
+                >
+                    <span className={`online-dot ${isConnected ? 'connected' : ''}`}></span>
+                    <span className="online-count">{onlineCount} online</span>
+                    {showOnlineUsers && onlineUsers.length > 0 && (
+                        <div className="online-users-dropdown">
+                            <div className="online-users-header">Online Users</div>
+                            {onlineUsers.map((u, index) => (
+                                <div key={u.id || index} className="online-user-item">
+                                    {u.picture ? (
+                                        <img src={u.picture} alt={u.name} className="online-user-avatar" />
+                                    ) : (
+                                        <div className="online-user-avatar-placeholder">
+                                            {u.name?.charAt(0)?.toUpperCase() || '?'}
+                                        </div>
+                                    )}
+                                    <span className="online-user-name">{u.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
                 {isAuthenticated && user && (
                     <div className="user-info">
-                        <span className="user-email">{user.email}</span>
+                        {user.picture && (
+                            <img src={user.picture} alt={user.name} className="user-avatar" />
+                        )}
+                        <span className="user-name">{user.name || user.email}</span>
                     </div>
                 )}
                 <button

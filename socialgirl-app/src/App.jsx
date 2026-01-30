@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import Header from './components/Header';
 import Preloader from './components/Preloader';
 import YouTubePage from './pages/YouTubePage';
 import InstagramPage from './pages/InstagramPage';
 import TikTokPage from './pages/TikTokPage';
 import SettingsPage from './pages/SettingsPage';
+import FacebookAdsPage from './pages/FacebookAdsPage';
 import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import usePlatformData from './hooks/usePlatformData';
 import useSearch from './hooks/useSearch';
@@ -18,12 +17,13 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ApiKeyProvider, useApiKeys } from './contexts/ApiKeyContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { DialogProvider } from './contexts/DialogContext';
+import { SocketProvider } from './contexts/SocketContext';
 import { setApiKeyContextGetter } from './utils/apiKeyManager';
 import './App.css';
 
 function AppContent() {
     const platformData = usePlatformData();
-    const { handleYouTubeSearch, handleTikTokSearch, handleInstagramSearch } = useSearch(platformData);
+    const { handleYouTubeSearch, handleTikTokSearch, handleInstagramSearch, handleYouTubeTrending } = useSearch(platformData);
     const location = useLocation();
     const { getApiKey } = useApiKeys();
 
@@ -41,6 +41,8 @@ function AppContent() {
             return platform.title;
         } else if (location.pathname === '/settings') {
             return 'Settings';
+        } else if (location.pathname === '/facebook-ads') {
+            return 'Facebook Ads Analytics';
         } else {
             return 'Content Analytics Dashboard';
         }
@@ -60,9 +62,6 @@ function AppContent() {
                 <Routes>
                     {/* Public routes */}
                     <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                     {/* Protected routes */}
                     <Route path="/" element={<Navigate to="/youtube" replace />} />
@@ -78,6 +77,7 @@ function AppContent() {
                                         userVideosData={platformData.getPlatformData('youtube').userVideosData}
                                         isLoading={platformData.getPlatformData('youtube').isLoading}
                                         onSearch={handleYouTubeSearch}
+                                        onTrending={handleYouTubeTrending}
                                         onClearData={() => platformData.clearPlatformData('youtube')}
                                     />
                                 </div>
@@ -131,6 +131,17 @@ function AppContent() {
                             </ProtectedRoute>
                         }
                     />
+                    <Route
+                        path="/facebook-ads"
+                        element={
+                            <ProtectedRoute>
+                                <div className="section">
+                                    <div className="section-title-v1">{getPageTitle()}</div>
+                                    <FacebookAdsPage />
+                                </div>
+                            </ProtectedRoute>
+                        }
+                    />
                 </Routes>
                 </main>
                 <footer className="app-footer">
@@ -149,18 +160,22 @@ function App() {
     };
 
     return (
-        <AuthProvider>
-            <ApiKeyProvider>
-                <DialogProvider>
-                    <ToastProvider>
-                        {isLoading && <Preloader onLoadComplete={handleLoadComplete} />}
-                        <Router>
-                            <AppContent />
-                        </Router>
-                    </ToastProvider>
-                </DialogProvider>
-            </ApiKeyProvider>
-        </AuthProvider>
+        <GoogleOAuthProvider clientId="650099542681-af1i3jhaf0g3dih9d3un3dc6e5lhrvf6.apps.googleusercontent.com">
+            <AuthProvider>
+                <SocketProvider>
+                    <ApiKeyProvider>
+                        <DialogProvider>
+                            <ToastProvider>
+                                {isLoading && <Preloader onLoadComplete={handleLoadComplete} />}
+                                <Router>
+                                    <AppContent />
+                                </Router>
+                            </ToastProvider>
+                        </DialogProvider>
+                    </ApiKeyProvider>
+                </SocketProvider>
+            </AuthProvider>
+        </GoogleOAuthProvider>
     );
 }
 

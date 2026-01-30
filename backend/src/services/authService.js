@@ -1,44 +1,80 @@
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const prisma = require('../config/database');
 const jwtConfig = require('../config/jwt');
 
-const BCRYPT_ROUNDS = 12;
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /**
- * Sign up a new user
- * @param {string} email - User email
- * @param {string} password - Plain text password
+ * Verify Google ID token and return user info
+ * @param {string} idToken - Google ID token from frontend
+ * @returns {Object} - Google user info
+ */
+async function verifyGoogleToken(idToken) {
+  const ticket = await client.verifyIdToken({
+    idToken,
+    audience: process.env.GOOGLE_CLIENT_ID
+  });
+  const payload = ticket.getPayload();
+  return {
+    googleId: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    picture: payload.picture
+  };
+}
+
+/**
+ * Authenticate with Google OAuth
+ * @param {string} idToken - Google ID token from frontend
  * @returns {Object} - {user, accessToken, refreshToken}
  */
-async function signup(email, password) {
+async function googleAuth(idToken) {
   try {
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
+    // Verify the Google token
+    const googleUser = await verifyGoogleToken(idToken);
+
+    // Find or create user by googleId
+    let user = await prisma.user.findUnique({
+      where: { googleId: googleUser.googleId }
     });
 
-    if (existingUser) {
-      throw new Error('User with this email already exists');
+    if (user) {
+      // Update existing user
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          name: googleUser.name,
+          picture: googleUser.picture,
+          lastLoginAt: new Date()
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          picture: true,
+          createdAt: true
+        }
+      });
+    } else {
+      // Create new user
+      user = await prisma.user.create({
+        data: {
+          googleId: googleUser.googleId,
+          email: googleUser.email,
+          name: googleUser.name,
+          picture: googleUser.picture,
+          lastLoginAt: new Date()
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          picture: true,
+          createdAt: true
+        }
+      });
     }
-
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email: email.toLowerCase(),
-        passwordHash,
-        lastLoginAt: new Date()
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true
-      }
-    });
 
     // Generate tokens
     const { accessToken, refreshToken } = await generateTokens(user.id);
@@ -49,60 +85,7 @@ async function signup(email, password) {
       refreshToken
     };
   } catch (error) {
-    console.error('[Auth Service] Signup failed:', error.message);
-    throw error;
-  }
-}
-
-/**
- * Login user
- * @param {string} email - User email
- * @param {string} password - Plain text password
- * @returns {Object} - {user, accessToken, refreshToken}
- */
-async function login(email, password) {
-  try {
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
-    });
-
-    if (!user) {
-      throw new Error('Invalid email or password');
-    }
-
-    // Check if user is active
-    if (!user.isActive) {
-      throw new Error('Account is deactivated');
-    }
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      throw new Error('Invalid email or password');
-    }
-
-    // Update last login
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() }
-    });
-
-    // Generate tokens
-    const { accessToken, refreshToken } = await generateTokens(user.id);
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        createdAt: user.createdAt
-      },
-      accessToken,
-      refreshToken
-    };
-  } catch (error) {
-    console.error('[Auth Service] Login failed:', error.message);
+    console.error('[Auth Service] Google auth failed:', error.message);
     throw error;
   }
 }
@@ -214,8 +197,7 @@ async function generateTokens(userId) {
 }
 
 module.exports = {
-  signup,
-  login,
+  googleAuth,
   refreshAccessToken,
   logout
 };

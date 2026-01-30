@@ -7,7 +7,7 @@ import { videosColumns, usersColumns } from '../config/tableColumns';
 import { PLATFORMS } from '../config/platforms';
 import '../styles/components/TableContainer.css';
 
-const TableContainer = ({ videosData, usersData, userVideosData = [], isLoading, platform = 'default', onSearch, onClearData, onSettingsChange }) => {
+const TableContainer = ({ videosData, usersData, userVideosData = [], isLoading, platform = 'default', onSearch, onTrending, onClearData, onSettingsChange }) => {
     const [activeTab, setActiveTab] = useState('videos');
     const [showSettingsDialog, setShowSettingsDialog] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
@@ -91,31 +91,43 @@ const TableContainer = ({ videosData, usersData, userVideosData = [], isLoading,
     };
 
     const handleExportCSV = () => {
-        const data = selectedRows.length > 0 ? selectedRows : getTableData();
+        const tableData = getTableData();
+        const data = selectedRows.length > 0 ? selectedRows : tableData;
         const columns = getTableColumns();
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
         const selectionPart = selectedRows.length > 0 ? `-selected-${selectedRows.length}` : '';
         const filename = `${platform}-${activeTab}${selectionPart}-${timestamp}.csv`;
-        
+
+        // Helper function to escape CSV values
+        const escapeCSV = (value) => {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            const stringValue = String(value);
+            // Always quote strings that contain commas, quotes, newlines, or start/end with whitespace
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r') || stringValue !== stringValue.trim()) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+        };
+
         // Create CSV header
-        const headers = columns.map(col => col.label).join(',');
-        
+        const headers = columns.map(col => escapeCSV(col.label)).join(',');
+
         // Create CSV rows
         const rows = data.map(item => {
             return columns.map(col => {
                 const value = item[col.key];
-                // Handle values that might contain commas or quotes
-                if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-                    return `"${value.replace(/"/g, '""')}"`;
-                }
-                return value || '';
+                return escapeCSV(value);
             }).join(',');
         });
-        
-        const csvContent = [headers, ...rows].join('\n');
+
+        // Add BOM for Excel compatibility with UTF-8
+        const BOM = '\uFEFF';
+        const csvContent = BOM + [headers, ...rows].join('\r\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
-        
+
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
@@ -145,8 +157,32 @@ const TableContainer = ({ videosData, usersData, userVideosData = [], isLoading,
                             onSearch(query);
                         }
                     }} placeholder={getSearchPlaceholder()} />}
+                    {platform === 'youtube' && activeTab === 'videos' && onTrending && (
+                        <button
+                            className="trending-btn aurora-btn aurora-btn-secondary aurora-btn-sm"
+                            onClick={() => onTrending('US')}
+                            title="Get Trending Videos (US)"
+                            disabled={isLoading}
+                        >
+                            🔥 Trending
+                        </button>
+                    )}
+                    {platform === 'instagram' && activeTab === 'videos' && (
+                        <button
+                            className="trending-btn aurora-btn aurora-btn-secondary aurora-btn-sm"
+                            onClick={() => {
+                                if (onSearch?.videos) {
+                                    onSearch.videos('viral');
+                                }
+                            }}
+                            title="Search Viral Reels"
+                            disabled={isLoading}
+                        >
+                            🔥 Viral
+                        </button>
+                    )}
                     {platform === 'youtube' && activeTab === 'videos' && (
-                        <button 
+                        <button
                             className="settings-btn"
                             onClick={() => setShowSettingsDialog(true)}
                             title="Search Settings"
@@ -161,14 +197,23 @@ const TableContainer = ({ videosData, usersData, userVideosData = [], isLoading,
                 <div className="table-actions">
                     {hasData && (
                         <>
-                            <button 
+                            {selectedRows.length > 0 && (
+                                <button
+                                    className="aurora-btn aurora-btn-ghost aurora-btn-sm"
+                                    onClick={() => setSelectedRows([])}
+                                    title="Clear selection"
+                                >
+                                    Clear ({selectedRows.length})
+                                </button>
+                            )}
+                            <button
                                 className="aurora-btn aurora-btn-primary aurora-btn-sm"
                                 onClick={handleExportJSON}
                                 title="Export data as JSON"
                             >
                                 {selectedRows.length > 0 ? `Export ${selectedRows.length} JSON` : 'Export JSON'}
                             </button>
-                            <button 
+                            <button
                                 className="aurora-btn aurora-btn-secondary aurora-btn-sm"
                                 onClick={handleExportCSV}
                                 title="Export data as CSV"

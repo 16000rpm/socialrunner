@@ -1,33 +1,21 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import './LoginPage.css';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { loginWithGoogle } = useAuth();
   const { showToast, showErrorToast } = useToast();
-
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleGoogleSuccess = async (credentialResponse) => {
     setIsLoading(true);
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await loginWithGoogle(credentialResponse.credential);
 
       if (result.success) {
         showToast('Login successful!', 'success');
@@ -42,6 +30,10 @@ const LoginPage = () => {
     }
   };
 
+  const handleGoogleError = () => {
+    showErrorToast('Google sign-in failed. Please try again.');
+  };
+
   return (
     <div className="auth-page">
       <div className="aurora-waves">
@@ -54,58 +46,31 @@ const LoginPage = () => {
       <div className="auth-container">
         <div className="auth-card">
           <div className="auth-header">
-            <h1 className="auth-title">Welcome Back</h1>
+            <h1 className="auth-title">Welcome</h1>
             <p className="auth-subtitle">Sign in to Social Runner</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="form-group">
-              <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                required
-                autoComplete="email"
+          <div className="google-login-container">
+            {isLoading ? (
+              <div className="loading-state">
+                <p>Signing in...</p>
+              </div>
+            ) : (
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="filled_black"
+                size="large"
+                width="100%"
+                text="signin_with"
+                shape="rectangular"
               />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
-                autoComplete="current-password"
-              />
-            </div>
-
-            <div className="forgot-password-link">
-              <Link to="/forgot-password">Forgot password?</Link>
-            </div>
-
-            <button
-              type="submit"
-              className="aurora-btn aurora-btn-primary auth-submit-btn"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
+            )}
+          </div>
 
           <div className="auth-footer">
-            <p>
-              Don't have an account?{' '}
-              <Link to="/signup" className="auth-link">
-                Sign up
-              </Link>
+            <p className="auth-disclaimer">
+              By signing in, you agree to our Terms of Service and Privacy Policy
             </p>
           </div>
         </div>

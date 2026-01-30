@@ -2,6 +2,8 @@ import { useCallback } from 'react';
 import { useToast } from '../contexts/ToastContext';
 import { useDialog } from '../contexts/DialogContext';
 import SearchService from '../services/searchService';
+import { getTrendingVideos } from '../apis/youtube';
+import { extractVideoData } from '../mappers/youtube';
 
 const searchService = new SearchService();
 
@@ -67,10 +69,27 @@ const useSearch = (platformData) => {
         };
     }, [createSearchHandler]);
 
+    // Handler for YouTube trending videos
+    const handleYouTubeTrending = useCallback(async (regionCode = 'US') => {
+        setLoading('youtube', true);
+        try {
+            const response = await getTrendingVideos(regionCode, 50);
+            const data = extractVideoData(response);
+            setVideosData('youtube', data);
+            showSuccessToast(data.length);
+        } catch (error) {
+            console.error('YouTube trending error:', error);
+            showErrorToast(`Failed to fetch trending videos: ${error.message}`);
+        } finally {
+            setLoading('youtube', false);
+        }
+    }, [setLoading, setVideosData, showSuccessToast, showErrorToast]);
+
     return {
         handleYouTubeSearch: createPlatformHandlers('youtube'),
         handleTikTokSearch: createPlatformHandlers('tiktok'),
-        handleInstagramSearch: createPlatformHandlers('instagram')
+        handleInstagramSearch: createPlatformHandlers('instagram'),
+        handleYouTubeTrending
     };
 };
 

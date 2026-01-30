@@ -337,6 +337,52 @@ async function getChannelVideosByHandle(handle, maxResults = 20, options = {}) {
     return await getChannelVideos(channelId, maxResults, options);
 }
 
+/**
+ * Get trending/most popular videos
+ * @param {string} regionCode - ISO 3166-1 alpha-2 country code (default: US)
+ * @param {number} maxResults - Maximum results to return (default: 25)
+ * @param {string} videoCategoryId - Optional category ID (e.g., "10" for Music, "17" for Sports)
+ * @returns {Promise<Object>} Trending videos with statistics
+ */
+async function getTrendingVideos(regionCode = 'US', maxResults = 25, videoCategoryId = null) {
+    console.log(`[YouTube API] Starting getTrendingVideos for region: ${regionCode}, maxResults: ${maxResults}`);
+
+    if (!canPerformOperation('youtube', 'videos')) {
+        throw new Error('YouTube API quota exceeded. Please try again tomorrow.');
+    }
+
+    const apiKey = await getYouTubeApiKey();
+    if (!apiKey) {
+        throw new Error('YouTube API key not found. Please configure it in Settings.');
+    }
+
+    let url = `${BASE_URL}/videos?part=snippet,statistics&chart=mostPopular&regionCode=${regionCode}&maxResults=${maxResults}&key=${apiKey}`;
+
+    if (videoCategoryId) {
+        url += `&videoCategoryId=${videoCategoryId}`;
+    }
+
+    console.log(`[YouTube API] Making request to: ${url.replace(apiKey, 'API_KEY_HIDDEN')}`);
+
+    const response = await fetch(url);
+    console.log(`[YouTube API] Response status: ${response.status} ${response.statusText}`);
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[YouTube API] Error response body:`, errorText);
+        throw new Error(`YouTube API error: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log(`[YouTube API] Trending videos retrieved:`, {
+        hasItems: !!result.items,
+        itemCount: result.items?.length || 0
+    });
+
+    trackOperation('youtube', 'videos');
+    return result;
+}
+
 export {
     getVideoData,
     getChannelData,
@@ -344,5 +390,6 @@ export {
     getVideosStatistics,
     getChannelByHandle,
     getChannelVideos,
-    getChannelVideosByHandle
+    getChannelVideosByHandle,
+    getTrendingVideos
 };

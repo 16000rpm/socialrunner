@@ -5,8 +5,7 @@ const AuthContext = createContext({
   isAuthenticated: false,
   user: null,
   accessToken: null,
-  signup: async () => {},
-  login: async () => {},
+  loginWithGoogle: async () => {},
   logout: () => {},
   refreshAccessToken: async () => {}
 });
@@ -48,37 +47,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
-   * Sign up a new user
+   * Login with Google OAuth
+   * @param {string} idToken - Google ID token from @react-oauth/google
    */
-  const signup = async (email, password) => {
+  const loginWithGoogle = async (idToken) => {
     try {
-      const response = await api.post('/api/auth/signup', { email, password });
-      const { user: newUser, accessToken: token, refreshToken } = response.data;
-
-      // Store tokens and user in localStorage
-      localStorage.setItem('accessToken', token);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify(newUser));
-
-      // Update state
-      setUser(newUser);
-      setAccessToken(token);
-      setIsAuthenticated(true);
-
-      return { success: true, user: newUser };
-    } catch (error) {
-      const errorMessage = error.response?.data?.error || 'Signup failed';
-      console.error('[Auth Context] Signup failed:', errorMessage);
-      return { success: false, error: errorMessage };
-    }
-  };
-
-  /**
-   * Login user
-   */
-  const login = async (email, password) => {
-    try {
-      const response = await api.post('/api/auth/login', { email, password });
+      const response = await api.post('/api/auth/google', { idToken });
       const { user: loggedInUser, accessToken: token, refreshToken } = response.data;
 
       // Store tokens and user in localStorage
@@ -93,8 +67,8 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user: loggedInUser };
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 'Login failed';
-      console.error('[Auth Context] Login failed:', errorMessage);
+      const errorMessage = error.response?.data?.error || 'Google login failed';
+      console.error('[Auth Context] Google login failed:', errorMessage);
       return { success: false, error: errorMessage };
     }
   };
@@ -161,8 +135,7 @@ export const AuthProvider = ({ children }) => {
     user,
     accessToken,
     isLoading,
-    signup,
-    login,
+    loginWithGoogle,
     logout,
     refreshAccessToken
   };

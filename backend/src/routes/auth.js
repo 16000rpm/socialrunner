@@ -7,48 +7,15 @@ const { authLimiter } = require('../middleware/rateLimiter');
 const router = express.Router();
 
 // Validation rules
-const signupValidation = [
-  body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Valid email required'),
-  body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-];
-
-const loginValidation = [
-  body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Valid email required'),
-  body('password')
+const googleAuthValidation = [
+  body('idToken')
     .notEmpty()
-    .withMessage('Password required')
-];
-
-const forgotPasswordValidation = [
-  body('email')
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Valid email required')
-];
-
-const resetPasswordValidation = [
-  body('token')
-    .notEmpty()
-    .withMessage('Reset token required'),
-  body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
+    .withMessage('Google ID token required')
 ];
 
 // Routes
-router.post('/signup', authLimiter, signupValidation, validate, authController.signup);
-router.post('/login', authLimiter, loginValidation, validate, authController.login);
+router.post('/google', authLimiter, googleAuthValidation, validate, authController.googleAuth);
 router.post('/refresh', authController.refresh);
 router.post('/logout', authController.logout);
-router.post('/forgot-password', authLimiter, forgotPasswordValidation, validate, authController.forgotPassword);
-router.post('/reset-password', authLimiter, resetPasswordValidation, validate, authController.resetPassword);
 
 module.exports = router;

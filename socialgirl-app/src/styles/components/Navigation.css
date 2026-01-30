@@ -73,6 +73,18 @@
     color: var(--aurora-cyan);
 }
 
+/* Logout button styles */
+.logout-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.logout-btn:hover {
+    color: #ff6b6b;
+}
+
 /* Mobile Navigation Styles */
 @media (max-width: 768px) {
     .nav-item-v2 {

@@ -1,25 +1,27 @@
 import React from 'react';
 import TableContainer from '../components/TableContainer';
 
-const PlatformPage = ({ 
-    videosData, 
-    usersData, 
-    userVideosData, 
-    isLoading, 
+const PlatformPage = ({
+    videosData,
+    usersData,
+    userVideosData,
+    isLoading,
     platform,
-    onSearch, 
+    onSearch,
+    onTrending,
     onClearData,
-    onSettingsChange 
+    onSettingsChange
 }) => {
     return (
         <div className="platform-page">
-            <TableContainer 
-                videosData={videosData} 
-                usersData={usersData} 
+            <TableContainer
+                videosData={videosData}
+                usersData={usersData}
                 userVideosData={userVideosData}
-                isLoading={isLoading} 
+                isLoading={isLoading}
                 platform={platform}
                 onSearch={onSearch}
+                onTrending={onTrending}
                 onClearData={onClearData}
                 onSettingsChange={onSettingsChange}
             />
