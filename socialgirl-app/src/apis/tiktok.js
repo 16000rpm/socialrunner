@@ -3,7 +3,7 @@ import { trackOperation, canPerformOperation } from '../utils/quotaManager';
 // TikTok API configuration
 // Use backend proxy in production, direct API in development
 const RAPIDAPI_HOST = 'tiktok-api23.p.rapidapi.com';
-const BACKEND_URL = 'https://social-runner-api.onrender.com';
+const BACKEND_URL = 'https://socialrunner.onrender.com';
 const IS_PRODUCTION = import.meta.env.PROD;
 const BASE_URL = IS_PRODUCTION
     ? `${BACKEND_URL}/api/proxy/tiktok`

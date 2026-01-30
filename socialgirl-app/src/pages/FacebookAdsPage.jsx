@@ -3,7 +3,7 @@ import { useToast } from '../contexts/ToastContext';
 import './FacebookAdsPage.css';
 
 const BACKEND_URL = import.meta.env.PROD
-    ? 'https://social-runner-api.onrender.com'
+    ? 'https://socialrunner.onrender.com'
     : 'http://localhost:5000';
 
 const FacebookAdsPage = () => {

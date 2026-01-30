@@ -3,7 +3,7 @@ import { trackOperation, canPerformOperation } from '../utils/quotaManager';
 // Instagram API configuration
 // Always use backend proxy for API key security
 const BACKEND_URL = import.meta.env.PROD
-    ? 'https://social-runner-api.onrender.com'
+    ? 'https://socialrunner.onrender.com'
     : 'http://localhost:5001';
 const BASE_URL = `${BACKEND_URL}/api/proxy/instagram`;
 

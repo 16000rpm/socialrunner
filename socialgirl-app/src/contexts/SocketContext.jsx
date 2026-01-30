@@ -25,7 +25,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     const socketUrl = import.meta.env.PROD
-      ? 'https://social-runner-api.onrender.com'
+      ? 'https://socialrunner.onrender.com'
       : 'http://localhost:5001';
 
     const socket = io(socketUrl);
