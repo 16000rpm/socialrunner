@@ -21,6 +21,7 @@ const io = new Server(httpServer, {
       'http://localhost:5173',
       'http://localhost:5174',
       'https://socialgirl-app-nu.vercel.app',
+      'https://socialrunner.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean),
     methods: ['GET', 'POST']
@@ -72,6 +73,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'https://socialgirl-app-nu.vercel.app',
+  'https://socialrunner.vercel.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
